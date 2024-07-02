@@ -118,8 +118,6 @@ class EngageModel:
 
         Args:
             Path (str): location for save the model
-
-        
         """
         torch.save(self.model.state_dict(), path)
         print(f"model saved at {path}")
