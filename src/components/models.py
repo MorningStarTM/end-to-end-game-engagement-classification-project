@@ -3,37 +3,31 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-
-
-
 class NeuralNetwork(nn.Module):
     """
     Model class 
     """
     def __init__(self, input_dim, out_dim):
-
         """
         Args:
             input dim (int) : input data dimension
             out_dim (int) : output data dimension
             hidden_dim (int) : hidden dimension
-        
-       """
+        """
         super(NeuralNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 64)
-        self.fc2 = nn.Linear(64, 32)
-        self.fc3 = nn.Linear(32, out_dim)
+        self.fc1 = nn.Linear(input_dim, 32)
+        self.fc2 = nn.Linear(32, 64)
+        self.fc3 = nn.Linear(64, 32)
+        self.fc4 = nn.Linear(32, out_dim)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim=1)
-
     
     def forward(self, x):
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.relu(self.fc3(x))
+        x = self.fc4(x)
         return self.softmax(x)
-    
-
 
 class EngageModel:
     def __init__(self, input_dim, output_dim, learning_rate=1e-3):
@@ -56,7 +50,7 @@ class EngageModel:
         
         Args:
             X_train : training data
-            y_train : taining lables
+            y_train : taining labels
             epochs (int)
             batch_size (int)
         """
@@ -73,27 +67,35 @@ class EngageModel:
                 loss.backward()
                 self.optimizer.step()
 
-            print(f'Epoch {epoch+1}/{epochs}, Loss: {loss.item()}')
+            # Calculate and print accuracy
+            self.model.eval()
+            with torch.no_grad():
+                train_outputs = self.model(X_train)
+                _, train_predicted = torch.max(train_outputs.data, 1)
+                train_correct = (train_predicted == y_train).sum().item()
+                train_accuracy = train_correct / y_train.size(0)
+            self.model.train()
 
+            print(f'Epoch {epoch+1}/{epochs}, Loss: {loss.item()}, Accuracy: {train_accuracy * 100:.2f}%')
 
-    def evaluate(self, X_test, y_test):
-        """
-        Function for model evaluation
-
-        Args:
-            X_test : testing data
-            y_test : testing lables
-
-        Return
-            Accuracy (float)
-        """
+    def evaluate(self, X_test, y_test, batch_size=32):
         self.model.eval()
+        
+        correct = 0
+        total = 0
         with torch.no_grad():
-            outputs = self.model(X_test)
-            _, predicted = torch.max(outputs.data, 1)
-            correct = (predicted == y_test).sum().item()
-            accuracy = correct / y_test.size(0)
+            for i in range(0, X_test.size(0), batch_size):
+                batch_X = X_test[i:i + batch_size]
+                batch_y = y_test[i:i + batch_size]
+                outputs = self.model(batch_X)
+                _, predicted = torch.max(outputs.data, 1)
+                total += batch_y.size(0)
+                correct += (predicted == batch_y).sum().item()
+        accuracy = correct / total
         return accuracy
+
+
+
 
     def predict(self, X):
         """
@@ -103,8 +105,7 @@ class EngageModel:
             X : data
         
         Return:
-            predicted lable
-
+            predicted label
         """
         self.model.eval()
         with torch.no_grad():
@@ -122,7 +123,6 @@ class EngageModel:
         torch.save(self.model.state_dict(), path)
         print(f"model saved at {path}")
 
-
     def load_model(self, path):
         """
         Function for load the model
@@ -133,5 +133,3 @@ class EngageModel:
         self.model.load_state_dict(torch.load(path))
         self.model.to(self.device)
         print("Model loaded")
-
-        
