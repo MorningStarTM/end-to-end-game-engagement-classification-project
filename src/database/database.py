@@ -99,6 +99,13 @@ class PlayerDB:
 
         print("Players data added from CSV successfully.")
 
+    def count_players(self):
+        count_query = '''
+        SELECT COUNT(*) FROM Players;
+        '''
+        self.cursor.execute(count_query)
+        count = self.cursor.fetchone()[0]
+        return count
     
     def close_connection(self):
         self.conn.close()
