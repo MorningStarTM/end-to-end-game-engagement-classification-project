@@ -1,6 +1,8 @@
 import sqlite3
 import os
 import pandas
+import pandas as pd
+import numpy as np
 
 
 
@@ -81,6 +83,21 @@ class PlayerDB:
         self.cursor.execute(delete_query, (player_id,))
         self.conn.commit()
         print("Player data deleted successfully.")
+
+    def add_players_from_csv(self, csv_file):
+        """
+        This function for add data from csv file into database
+
+        Args:
+            csv_file (str)
+        """
+        # Read CSV file into a DataFrame
+        df = pd.read_csv(csv_file)
+
+        # Insert DataFrame rows into SQLite database
+        df.to_sql('Players', self.conn, if_exists='append', index=False)
+
+        print("Players data added from CSV successfully.")
 
     
     def close_connection(self):
