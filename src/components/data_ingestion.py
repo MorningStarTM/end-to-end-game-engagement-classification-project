@@ -5,7 +5,6 @@ from src.logger import logging
 from dataclasses import dataclass
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from src.components.data_transformation import DataTransformation, DataTransformationConfig
 
 
 @dataclass
