@@ -9,7 +9,7 @@ import numpy as np
 
 class PlayerDB:
     def __init__(self, db_file):
-        self.db_file = db_file
+        self.db_file = os.path.join('db',db_file)
         self.conn = None
         self.cursor = None
         self._initialize_database()
