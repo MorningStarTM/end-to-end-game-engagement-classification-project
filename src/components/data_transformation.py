@@ -32,9 +32,11 @@ class DataPreprocessor:
         # Apply LabelEncoder to all columns
         df_train = train_data.apply(self.label_encoder.fit_transform, axis=0)
         df_test = test_data.apply(self.label_encoder.fit_transform, axis=0)
+        logging.info("data transformation applied successfully")
 
         # Save the encoder
         save_object(self.data_transform.preprocessor_obj_file_path, self.label_encoder)
+        logging.info(f"transformation module saved as pickle file at {self.data_transform.preprocessor_obj_file_path}")
         
         return df_train, df_test
 

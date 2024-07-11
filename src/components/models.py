@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from src.exception import CustomException
+from src.logger import logging
 
 class NeuralNetwork(nn.Module):
     def __init__(self, input_dim, out_dim):
@@ -35,6 +37,7 @@ class EngageModel:
             epochs (int)
             batch_size (int)
         """
+        logging.info("training started")
         self.model.train()
         for epoch in range(epochs):
             permutation = torch.randperm(X_train.size()[0])
@@ -54,6 +57,8 @@ class EngageModel:
             if self.best_accuracy < train_accuracy:
                 self.best_accuracy = train_accuracy
                 self.save_model()
+
+        logging.info("training completed")
 
     def evaluate(self, X_test, y_test, batch_size=32):
         """
