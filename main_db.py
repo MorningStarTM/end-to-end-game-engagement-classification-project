@@ -9,11 +9,19 @@ app = FastAPI()
 
 db = PlayerDB("players.db")
 
+
+#endpoint for create player record 
 @app.post("/players/")
 async def create_player(player_data: Dict):
-    player_id = db.create_player(list(player_data.values()))
-    return {"message": "Player added successfully", "PlayerID": player_id}
+    success, message = db.create_player(list(player_data.values()))
+    if success:
+        return {"message": message}
+    else:
+        raise HTTPException(status_code=400, detail=message)
+    
 
+
+#endpoint for get player records
 @app.get("/players/{player_id}")
 async def read_player(player_id: int):
     player = db.read_player(player_id)
@@ -22,16 +30,30 @@ async def read_player(player_id: int):
     else:
         raise HTTPException(status_code=404, detail="Player not found")
 
+
+
+# endpoint for update player
 @app.put("/players/{player_id}")
 async def update_player(player_id: int, updated_data: Dict):
-    db.update_player(player_id, list(updated_data.values()))
-    return {"message": "Player data updated successfully"}
+    success, message = db.update_player(player_id, list(updated_data.values()))
+    if success:
+        return {"message": message}
+    else:
+        raise HTTPException(status_code=400, detail=message)
 
+
+
+# endpoint for delete record
 @app.delete("/players/{player_id}")
 async def delete_player(player_id: int):
-    db.delete_player(player_id)
-    return {"message": "Player deleted successfully"}
+    success, message = db.delete_player(player_id)
+    if success:
+        return {"message": message}
+    else:
+        raise HTTPException(status_code=400, detail=message)
 
+
+# endpoint for add data from csv file
 @app.post("/players/csv/")
 async def add_players_from_csv(csv_file: UploadFile = File(...)):
     file_path = f"temp/{csv_file.filename}"
@@ -40,7 +62,13 @@ async def add_players_from_csv(csv_file: UploadFile = File(...)):
     db.add_players_from_csv(file_path)
     return {"message": "Players added from CSV successfully"}
 
-@app.get("/players/count/")
+
+# end point for get total count of data
+@app.get("/players/count")
 async def count_players():
-    count = db.count_players()
-    return {"PlayerCount": count}
+    success, result = db.count_players()
+    
+    if success:
+        return {"PlayerCount": result}
+    else:
+        raise HTTPException(status_code=400, detail=result)
