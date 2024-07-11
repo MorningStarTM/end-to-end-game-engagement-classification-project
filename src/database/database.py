@@ -3,8 +3,7 @@ import os
 import pandas
 import pandas as pd
 import numpy as np
-
-
+from src.logger import logging
 
 
 class PlayerDB:
@@ -38,7 +37,7 @@ class PlayerDB:
         '''
         self.cursor.execute(create_table_query)
         self.conn.commit()
-
+        logging.info("database initialized")
 
     def create_player(self, player_data):
         try:
@@ -51,10 +50,11 @@ class PlayerDB:
             '''
             self.cursor.execute(insert_query, player_data)
             self.conn.commit()
-            print("Player data added successfully.")
+            return (True, "Player data added successfully.")
         
         except sqlite3.Error as er:
-            return (er.sqlite_errorcode, er.sqlite_errorname)
+            return (False, f"Error {er}")
+
 
 
     def read_player(self, player_id):
@@ -66,7 +66,7 @@ class PlayerDB:
             player = self.cursor.fetchone()
             return player
         except sqlite3.Error as er:
-            return (er.sqlite_errorcode, er.sqlite_errorname)
+            return (False, f"Error {er}")
 
     def update_player(self, player_id, updated_data):
         try:
@@ -80,10 +80,11 @@ class PlayerDB:
             updated_data.append(player_id)
             self.cursor.execute(update_query, updated_data)
             self.conn.commit()
-            print("Player data updated successfully.")
+            return (True, "Player data updated successfully.")
         
         except sqlite3.Error as er:
-            return (er.sqlite_errorcode, er.sqlite_errorname)
+            return (False, f"Error: {er}")
+
 
     
     def delete_player(self, player_id):
@@ -93,9 +94,16 @@ class PlayerDB:
             '''
             self.cursor.execute(delete_query, (player_id,))
             self.conn.commit()
-            print("Player data deleted successfully.")
+
+            if self.cursor.rowcount == 0:
+                return (False, "No player found with the given ID.")
+            
+            logging.info(f"Player {player_id} deleted")
+            return (True, "Player data deleted successfully.")
+            
         except sqlite3.Error as er:
-            return (er.sqlite_errorcode, er.sqlite_errorname)
+            return (False, f"Error: {er}")
+
 
     def add_players_from_csv(self, csv_file):
 
@@ -113,6 +121,7 @@ class PlayerDB:
             df.to_sql('Players', self.conn, if_exists='append', index=False)
 
             print("Players data added from CSV successfully.")
+            logging.info(f"data added via csv file")
         except sqlite3.Error as er:
             return (er.sqlite_errorcode, er.sqlite_errorname)
 
@@ -123,9 +132,11 @@ class PlayerDB:
             '''
             self.cursor.execute(count_query)
             count = self.cursor.fetchone()[0]
-            return count
+            return (True, count)
         except sqlite3.Error as er:
-            return (er.sqlite_errorcode, er.sqlite_errorname)
+            return (False, f"Error: {er}")
+
+
     
     def close_connection(self):
         self.conn.close()
