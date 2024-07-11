@@ -41,50 +41,64 @@ class PlayerDB:
 
 
     def create_player(self, player_data):
-        insert_query = '''
-        INSERT INTO Players (PlayerID, Age, Gender, Location, GameGenre, 
-                             PlayTimeHours, InGamePurchases, GameDifficulty, 
-                             SessionsPerWeek, AvgSessionDurationMinutes, 
-                             PlayerLevel, AchievementsUnlocked, EngagementLevel)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        '''
-        self.cursor.execute(insert_query, player_data)
-        self.conn.commit()
-        print("Player data added successfully.")
+        try:
+            insert_query = '''
+            INSERT INTO Players (PlayerID, Age, Gender, Location, GameGenre, 
+                                PlayTimeHours, InGamePurchases, GameDifficulty, 
+                                SessionsPerWeek, AvgSessionDurationMinutes, 
+                                PlayerLevel, AchievementsUnlocked, EngagementLevel)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            '''
+            self.cursor.execute(insert_query, player_data)
+            self.conn.commit()
+            print("Player data added successfully.")
+        
+        except sqlite3.Error as er:
+            return (er.sqlite_errorcode, er.sqlite_errorname)
 
 
     def read_player(self, player_id):
-        select_query = '''
-        SELECT * FROM Players WHERE PlayerID = ?;
-        '''
-        self.cursor.execute(select_query, (player_id,))
-        player = self.cursor.fetchone()
-        return player
-    
+        try:
+            select_query = '''
+            SELECT * FROM Players WHERE PlayerID = ?;
+            '''
+            self.cursor.execute(select_query, (player_id,))
+            player = self.cursor.fetchone()
+            return player
+        except sqlite3.Error as er:
+            return (er.sqlite_errorcode, er.sqlite_errorname)
 
     def update_player(self, player_id, updated_data):
-        update_query = '''
-        UPDATE Players SET Age=?, Gender=?, Location=?, GameGenre=?, 
-                          PlayTimeHours=?, InGamePurchases=?, GameDifficulty=?, 
-                          SessionsPerWeek=?, AvgSessionDurationMinutes=?, 
-                          PlayerLevel=?, AchievementsUnlocked=?, EngagementLevel=?
-        WHERE PlayerID=?;
-        '''
-        updated_data.append(player_id)
-        self.cursor.execute(update_query, updated_data)
-        self.conn.commit()
-        print("Player data updated successfully.")
+        try:
+            update_query = '''
+            UPDATE Players SET Age=?, Gender=?, Location=?, GameGenre=?, 
+                            PlayTimeHours=?, InGamePurchases=?, GameDifficulty=?, 
+                            SessionsPerWeek=?, AvgSessionDurationMinutes=?, 
+                            PlayerLevel=?, AchievementsUnlocked=?, EngagementLevel=?
+            WHERE PlayerID=?;
+            '''
+            updated_data.append(player_id)
+            self.cursor.execute(update_query, updated_data)
+            self.conn.commit()
+            print("Player data updated successfully.")
+        
+        except sqlite3.Error as er:
+            return (er.sqlite_errorcode, er.sqlite_errorname)
 
     
     def delete_player(self, player_id):
-        delete_query = '''
-        DELETE FROM Players WHERE PlayerID=?;
-        '''
-        self.cursor.execute(delete_query, (player_id,))
-        self.conn.commit()
-        print("Player data deleted successfully.")
+        try:
+            delete_query = '''
+            DELETE FROM Players WHERE PlayerID=?;
+            '''
+            self.cursor.execute(delete_query, (player_id,))
+            self.conn.commit()
+            print("Player data deleted successfully.")
+        except sqlite3.Error as er:
+            return (er.sqlite_errorcode, er.sqlite_errorname)
 
     def add_players_from_csv(self, csv_file):
+
         """
         This function for add data from csv file into database
 
@@ -92,20 +106,26 @@ class PlayerDB:
             csv_file (str)
         """
         # Read CSV file into a DataFrame
-        df = pd.read_csv(csv_file)
+        try:
+            df = pd.read_csv(csv_file)
 
-        # Insert DataFrame rows into SQLite database
-        df.to_sql('Players', self.conn, if_exists='append', index=False)
+            # Insert DataFrame rows into SQLite database
+            df.to_sql('Players', self.conn, if_exists='append', index=False)
 
-        print("Players data added from CSV successfully.")
+            print("Players data added from CSV successfully.")
+        except sqlite3.Error as er:
+            return (er.sqlite_errorcode, er.sqlite_errorname)
 
     def count_players(self):
-        count_query = '''
-        SELECT COUNT(*) FROM Players;
-        '''
-        self.cursor.execute(count_query)
-        count = self.cursor.fetchone()[0]
-        return count
+        try:
+            count_query = '''
+            SELECT COUNT(*) FROM Players;
+            '''
+            self.cursor.execute(count_query)
+            count = self.cursor.fetchone()[0]
+            return count
+        except sqlite3.Error as er:
+            return (er.sqlite_errorcode, er.sqlite_errorname)
     
     def close_connection(self):
         self.conn.close()
