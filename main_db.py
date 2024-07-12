@@ -10,7 +10,15 @@ app = FastAPI()
 db = PlayerDB("players.db")
 
 
-#endpoint for create player record 
+@app.get("/players/count")
+async def count_players():
+    success, result = db.count_players()
+    if success:
+        return {"PlayerCount": result}
+    else:
+        raise HTTPException(status_code=400, detail=result)
+
+# Endpoint for creating a player record
 @app.post("/players/")
 async def create_player(player_data: Dict):
     success, message = db.create_player(list(player_data.values()))
@@ -18,21 +26,17 @@ async def create_player(player_data: Dict):
         return {"message": message}
     else:
         raise HTTPException(status_code=400, detail=message)
-    
 
-
-#endpoint for get player records
+# Endpoint for getting player records
 @app.get("/players/{player_id}")
 async def read_player(player_id: int):
-    player = db.read_player(player_id)
-    if player:
-        return {"Player": player}
+    result = db.read_player(player_id)
+    if result["error"] is None:
+        return {"player": result["player"]}
     else:
-        raise HTTPException(status_code=404, detail="Player not found")
+        raise HTTPException(status_code=404, detail=result["error"])
 
-
-
-# endpoint for update player
+# Endpoint for updating a player record
 @app.put("/players/{player_id}")
 async def update_player(player_id: int, updated_data: Dict):
     success, message = db.update_player(player_id, list(updated_data.values()))
@@ -41,9 +45,7 @@ async def update_player(player_id: int, updated_data: Dict):
     else:
         raise HTTPException(status_code=400, detail=message)
 
-
-
-# endpoint for delete record
+# Endpoint for deleting a player record
 @app.delete("/players/{player_id}")
 async def delete_player(player_id: int):
     success, message = db.delete_player(player_id)
@@ -52,23 +54,17 @@ async def delete_player(player_id: int):
     else:
         raise HTTPException(status_code=400, detail=message)
 
-
-# endpoint for add data from csv file
+# Endpoint for adding players from a CSV file
 @app.post("/players/csv/")
 async def add_players_from_csv(csv_file: UploadFile = File(...)):
-    file_path = f"temp/{csv_file.filename}"
-    with open(file_path, "wb") as f:
-        f.write(await csv_file.read())
-    db.add_players_from_csv(file_path)
-    return {"message": "Players added from CSV successfully"}
-
-
-# end point for get total count of data
-@app.get("/players/count")
-async def count_players():
-    success, result = db.count_players()
-    
-    if success:
-        return {"PlayerCount": result}
-    else:
-        raise HTTPException(status_code=400, detail=result)
+    try:
+        file_path = f"temp/{csv_file.filename}"
+        with open(file_path, "wb") as f:
+            f.write(await csv_file.read())
+        success, message = db.add_players_from_csv(file_path)
+        if success:
+            return {"message": "Players added from CSV successfully"}
+        else:
+            raise HTTPException(status_code=400, detail=message)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")

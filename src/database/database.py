@@ -64,9 +64,9 @@ class PlayerDB:
             '''
             self.cursor.execute(select_query, (player_id,))
             player = self.cursor.fetchone()
-            return player
+            return {"player":player, "error":None}
         except sqlite3.Error as er:
-            return (False, f"Error {er}")
+            return {"player":None, "error":f"Error: {er}"}
 
     def update_player(self, player_id, updated_data):
         try:
@@ -134,7 +134,8 @@ class PlayerDB:
             count = self.cursor.fetchone()[0]
             return (True, count)
         except sqlite3.Error as er:
-            return (False, f"Error: {er}")
+            return (False, f"Error : {er}")
+
 
 
     
