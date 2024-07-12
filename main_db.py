@@ -4,10 +4,11 @@ from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.responses import JSONResponse
 from typing import List, Dict
 from src.database import PlayerDB
+from src.const import *
 app = FastAPI()
 
 
-db = PlayerDB("players.db")
+db = PlayerDB(DB_NAME)
 
 
 @app.get("/players/count")
@@ -16,7 +17,7 @@ async def count_players():
     if success:
         return {"PlayerCount": result}
     else:
-        raise HTTPException(status_code=400, detail=result)
+        raise HTTPException(status_code=STATUS_BAD_REQUEST, detail=result)
 
 # Endpoint for creating a player record
 @app.post("/players/")
@@ -25,7 +26,7 @@ async def create_player(player_data: Dict):
     if success:
         return {"message": message}
     else:
-        raise HTTPException(status_code=400, detail=message)
+        raise HTTPException(status_code=STATUS_BAD_REQUEST, detail=message)
 
 # Endpoint for getting player records
 @app.get("/players/{player_id}")
@@ -34,7 +35,7 @@ async def read_player(player_id: int):
     if result["error"] is None:
         return {"player": result["player"]}
     else:
-        raise HTTPException(status_code=404, detail=result["error"])
+        raise HTTPException(status_code=STATUS_NOT_FOUND, detail=result["error"])
 
 # Endpoint for updating a player record
 @app.put("/players/{player_id}")
@@ -43,7 +44,7 @@ async def update_player(player_id: int, updated_data: Dict):
     if success:
         return {"message": message}
     else:
-        raise HTTPException(status_code=400, detail=message)
+        raise HTTPException(status_code=STATUS_BAD_REQUEST, detail=message)
 
 # Endpoint for deleting a player record
 @app.delete("/players/{player_id}")
@@ -52,7 +53,7 @@ async def delete_player(player_id: int):
     if success:
         return {"message": message}
     else:
-        raise HTTPException(status_code=400, detail=message)
+        raise HTTPException(status_code=STATUS_BAD_REQUEST, detail=message)
 
 # Endpoint for adding players from a CSV file
 @app.post("/players/csv/")
@@ -65,6 +66,6 @@ async def add_players_from_csv(csv_file: UploadFile = File(...)):
         if success:
             return {"message": "Players added from CSV successfully"}
         else:
-            raise HTTPException(status_code=400, detail=message)
+            raise HTTPException(status_code=STATUS_BAD_REQUEST, detail=message)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+        raise HTTPException(status_code=STATUS_INTERNAL_SERVER_ERROR, detail=f"Internal server error: {e}")
