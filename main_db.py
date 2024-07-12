@@ -5,6 +5,8 @@ from fastapi.responses import JSONResponse
 from typing import List, Dict
 from src.database import PlayerDB
 from src.const import *
+import uvicorn
+
 app = FastAPI()
 
 
@@ -69,3 +71,8 @@ async def add_players_from_csv(csv_file: UploadFile = File(...)):
             raise HTTPException(status_code=STATUS_BAD_REQUEST, detail=message)
     except Exception as e:
         raise HTTPException(status_code=STATUS_INTERNAL_SERVER_ERROR, detail=f"Internal server error: {e}")
+    
+
+
+if __name__ == "__main__":
+    uvicorn.run("main_db:app", host="127.0.0.1", port=8000, reload=True)
