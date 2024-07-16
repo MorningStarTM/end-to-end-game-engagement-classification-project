@@ -19,7 +19,7 @@ class NeuralNetwork(nn.Module):
         return x
 
 class EngageModel:
-    def __init__(self, input_dim, output_dim, path, learning_rate=1e-3):
+    def __init__(self, input_dim, output_dim, path="artifacts\\model.pth", learning_rate=1e-3):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = NeuralNetwork(input_dim, output_dim).to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
