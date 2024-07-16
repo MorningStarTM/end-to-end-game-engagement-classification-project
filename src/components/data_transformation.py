@@ -10,6 +10,17 @@ from sklearn.preprocessing import LabelEncoder
 import torch
 
 
+import os
+import numpy as np
+import pandas as pd
+from src.exception import CustomException
+from src.logger import logging
+import sys
+from dataclasses import dataclass
+from src.utils import save_object
+from sklearn.preprocessing import LabelEncoder
+import torch
+
 @dataclass
 class DataTransformationConfig:
     preprocessor_obj_file_path = os.path.join('artifacts', 'preprocessor.pkl')
@@ -23,6 +34,7 @@ class DataPreprocessor:
         self.exclude_columns = exclude_columns
         self.label_encoders = {col: LabelEncoder() for col in self.categorical_columns}
         self.data_transform = DataTransformationConfig()
+
 
     def load_and_encode_data(self):
         # Load data
@@ -46,6 +58,10 @@ class DataPreprocessor:
         df_test = pd.concat([test_numerical, test_categorical], axis=1)
         logging.info("Data transformation applied successfully")
 
+        label_mapping = {'High': 2, 'Medium': 1, 'Low': 0}
+        df_train['EngagementLevel'] = df_train['EngagementLevel'].map(label_mapping)
+        df_test['EngagementLevel'] = df_test['EngagementLevel'].map(label_mapping)
+
         # Save the encoders
         save_object(self.data_transform.preprocessor_obj_file_path, self.label_encoders)
         logging.info(f"Transformation module saved as pickle file at {self.data_transform.preprocessor_obj_file_path}")
@@ -53,10 +69,10 @@ class DataPreprocessor:
         return df_train, df_test
 
     def to_tensors(self, df_train, df_test):
-        x_train = df_train.drop(columns=[self.target_column] + self.exclude_columns)
+        x_train = df_train.drop(columns=[self.target_column] + ['PlayerID'])
         y_train = df_train[self.target_column]
 
-        x_test = df_test.drop(columns=[self.target_column] + self.exclude_columns)
+        x_test = df_test.drop(columns=[self.target_column] + ['PlayerID'])
         y_test = df_test[self.target_column]
 
         X_train_tensor = torch.tensor(x_train.to_numpy(), dtype=torch.float32)

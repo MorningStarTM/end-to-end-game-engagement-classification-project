@@ -3,6 +3,10 @@ import torch.nn as nn
 import torch.optim as optim
 from src.exception import CustomException
 from src.logger import logging
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+
+
 
 class NeuralNetwork(nn.Module):
     def __init__(self, input_dim, out_dim):
@@ -104,3 +108,25 @@ class EngageModel:
         self.model.load_state_dict(torch.load(self.path))
         self.model.to(self.device)
         print("Model loaded")
+
+
+    def compute_confusion_matrix(self, X_test, y_test):
+        """
+        Compute and display the confusion matrix.
+        """
+        self.model.eval()
+        with torch.no_grad():
+            X_test = X_test.to(self.device)
+            y_test = y_test.to(self.device)
+            outputs = self.model(X_test)
+            _, predicted = torch.max(outputs, 1)
+        
+        y_true = y_test.cpu().numpy()
+        y_pred = predicted.cpu().numpy()
+        cm = confusion_matrix(y_true, y_pred)
+        
+        # Plot confusion matrix
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp.plot(cmap=plt.cm.Blues)
+        plt.show()
+        return cm
