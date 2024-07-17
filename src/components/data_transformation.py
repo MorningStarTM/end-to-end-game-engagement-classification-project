@@ -26,45 +26,60 @@ class DataTransformationConfig:
     preprocessor_obj_file_path = os.path.join('artifacts', 'preprocessor.pkl')
 
 class DataPreprocessor:
-    def __init__(self, train_csv_path, test_csv_path, target_column, categorical_columns, exclude_columns=[]):
+    def __init__(self, train_csv_path, test_csv_path, target_column):
         self.train_csv_path = train_csv_path
         self.test_csv_path = test_csv_path
         self.target_column = target_column
-        self.categorical_columns = categorical_columns
-        self.exclude_columns = exclude_columns
-        self.label_encoders = {col: LabelEncoder() for col in self.categorical_columns}
         self.data_transform = DataTransformationConfig()
 
 
     def load_and_encode_data(self):
         # Load data
-        train_data = pd.read_csv(self.train_csv_path, index_col=False)
-        test_data = pd.read_csv(self.test_csv_path, index_col=False)
-
-        # Separate categorical and numerical columns
-        train_categorical = train_data[self.categorical_columns].copy()
-        train_numerical = train_data.drop(columns=self.categorical_columns)
-
-        test_categorical = test_data[self.categorical_columns].copy()
-        test_numerical = test_data.drop(columns=self.categorical_columns)
-
-        # Apply LabelEncoder to categorical columns
-        for col in self.categorical_columns:
-            train_categorical[col] = self.label_encoders[col].fit_transform(train_categorical[col])
-            test_categorical[col] = self.label_encoders[col].transform(test_categorical[col])
-
-        # Merge dataframes back together
-        df_train = pd.concat([train_numerical, train_categorical], axis=1)
-        df_test = pd.concat([test_numerical, test_categorical], axis=1)
-        logging.info("Data transformation applied successfully")
+        df_train = pd.read_csv(self.train_csv_path, index_col=False)
+        df_test = pd.read_csv(self.test_csv_path, index_col=False)
 
         label_mapping = {'High': 2, 'Medium': 1, 'Low': 0}
+        gameGenre = {
+            'Strategy': 0, 
+            'Sports' :1, 
+            'Action':2, 
+            'RPG':3, 
+            'Simulation':4
+        }
+
+        location = {
+            'Other':0, 
+            'USA':1, 
+            'Europe':2, 
+            'Asia':3
+        }
+
+        difficulty = {
+            'Medium':1, 
+            'Easy':0, 
+            'Hard':2
+        }
+
+        gender = {
+            'Male':0,
+            'Female':1
+        }
+
         df_train['EngagementLevel'] = df_train['EngagementLevel'].map(label_mapping)
         df_test['EngagementLevel'] = df_test['EngagementLevel'].map(label_mapping)
 
-        # Save the encoders
-        save_object(self.data_transform.preprocessor_obj_file_path, self.label_encoders)
-        logging.info(f"Transformation module saved as pickle file at {self.data_transform.preprocessor_obj_file_path}")
+        df_train['Location'] = df_train['Location'].map(location)
+        df_test['Location'] = df_test['Location'].map(location)
+
+        df_train['GameGenre'] = df_train['GameGenre'].map(gameGenre)
+        df_test['GameGenre'] = df_test['GameGenre'].map(gameGenre)
+
+        df_train['GameDifficulty'] = df_train['GameDifficulty'].map(difficulty)
+        df_test['GameDifficulty'] = df_test['GameDifficulty'].map(difficulty)  
+
+        df_train['Gender'] = df_train['Gender'].map(gender)
+        df_test['Gender'] = df_test['Gender'].map(gender)      
+        logging.info("Data transformation applied successfully")
         
         return df_train, df_test
 
