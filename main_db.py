@@ -6,11 +6,48 @@ from typing import List, Dict
 from src.database import PlayerDB
 from src.const import *
 import uvicorn
+from pydantic import BaseModel
+import torch
+import numpy as np
+from src.components.models import EngageModel
+from src.model_deployment import prepare_data_for_model
 
 app = FastAPI()
 
+level = ['Medium', 'High', 'Low']
+p_path = 'artifacts\\preprocessor.pkl'
 
+model = EngageModel(11,3)
+model.load_model()
 db = PlayerDB(DB_NAME)
+
+
+
+class ScoringItem(BaseModel):
+    Age : int
+    Gender : str
+    Location : str
+    GameGenre : str
+    PlayTimeHours : float
+    InGamePurchases : int
+    GameDifficulty : str
+    SessionsPerWeek : int
+    AvgSessionDurationMinutes : int
+    PlayerLevel : int
+    AchievementsUnlocked : int
+
+
+@app.get('/predict')
+async def scoring_endpoint(item:ScoringItem):
+    try:
+        data_point = item.dict()
+        #print(data_point)
+        x_tensor = prepare_data_for_model(data_point, p_path)
+        pred = model.predict(x_tensor)
+        print(pred.item())
+        return level[pred.item()]
+    except Exception as e:
+        raise HTTPException(status_code=STATUS_BAD_REQUEST, detail=e)
 
 
 @app.get("/players/count")

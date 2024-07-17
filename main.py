@@ -35,7 +35,7 @@ class ScoringItem(BaseModel):
 #Gender	Location	GameGenre	
 # #PlayTimeHours	InGamePurchases	GameDifficulty	SessionsPerWeek		PlayerLevel	AchievementsUnlocked
 
-@app.get('/')
+@app.get('/predict')
 async def scoring_endpoint(item:ScoringItem):
     data_point = item.dict()
     print(data_point)
