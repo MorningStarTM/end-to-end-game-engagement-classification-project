@@ -9,7 +9,7 @@ def load_object(path):
         print("preprocessor loaded")
     return  loaded_le
 
-def prepare_data_for_model(data, encoders_path):
+def prepare_data_for_model(data):
     """
     Prepares incoming data for model prediction.
     
@@ -24,36 +24,47 @@ def prepare_data_for_model(data, encoders_path):
     - X_tensor (torch.Tensor): Features tensor for model prediction
     """
 
-    exclude_columns = ['Age', 'PlayTimeHours', 'InGamePurchases', 'SessionsPerWeek', 'AvgSessionDurationMinutes', 'PlayerLevel', 'AchievementsUnlocked']
-    categorical_columns = ['Gender', 'Location', 'GameGenre', 'GameDifficulty']
-    target_column = "target"
-    # Load the saved label encoders
-    label_encoders = load_object(encoders_path)
 
     # Convert incoming data to a DataFrame
     data_df = pd.DataFrame([data])
 
-    # Separate categorical and numerical columns
-    data_categorical = data_df[categorical_columns].copy()
-    data_numerical = data_df.drop(columns=categorical_columns)
+    label_mapping = {'High': 2, 'Medium': 1, 'Low': 0}
+    gameGenre = {
+        'Strategy': 0, 
+        'Sports' :1, 
+        'Action':2, 
+        'RPG':3, 
+        'Simulation':4
+    }
 
-    # Apply LabelEncoder to categorical columns
-    for col in categorical_columns:
-        if col in label_encoders:
-            data_categorical[col] = label_encoders[col].transform(data_categorical[col])
-        else:
-            raise ValueError(f"No encoder found for column: {col}")
+    location = {
+        'Other':0, 
+        'USA':1, 
+        'Europe':2, 
+        'Asia':3
+    }
 
-    # Merge dataframes back together
-    data_transformed = pd.concat([data_numerical, data_categorical], axis=1)
+    difficulty = {
+        'Medium':1, 
+        'Easy':0, 
+        'Hard':2
+    }
 
-    # Drop the target column if it exists in the incoming data
-    if target_column in data_transformed.columns:
-        data_transformed = data_transformed.drop(columns=[target_column])
+    gender = {
+        'Male':0,
+        'Female':1
+    }
+
+    data_df['Location'] = data_df['Location'].map(location)
+
+    data_df['GameGenre'] = data_df['GameGenre'].map(gameGenre)
+
+    data_df['GameDifficulty'] = data_df['GameDifficulty'].map(difficulty)
+
+    data_df['Gender'] = data_df['Gender'].map(gender)    
 
     # Convert to numpy array and then to tensor
-    
-    X_numpy = data_transformed.to_numpy()
+    X_numpy = data_df.to_numpy()
     X_tensor = torch.tensor(X_numpy, dtype=torch.float32)
 
     return X_tensor
