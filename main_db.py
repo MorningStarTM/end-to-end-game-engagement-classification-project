@@ -17,7 +17,7 @@ app = FastAPI()
 level = ['Medium', 'High', 'Low']
 p_path = 'artifacts\\preprocessor.pkl'
 
-model = EngageModel(11,3)
+model = EngageModel(11,3, "artifacts\\testModel.pth")
 model.load_model()
 db = PlayerDB(DB_NAME)
 
@@ -42,7 +42,7 @@ async def scoring_endpoint(item:ScoringItem):
     try:
         data_point = item.dict()
         #print(data_point)
-        x_tensor = prepare_data_for_model(data_point, p_path)
+        x_tensor = prepare_data_for_model(data_point)
         pred = model.predict(x_tensor)
         print(pred.item())
         return level[pred.item()]
